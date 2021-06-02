@@ -168,8 +168,37 @@ var testInputs = []dateTest{
 	{in: "03 February 2013", out: "2013-02-03 00:00:00 +0000 UTC"},
 	{in: "3 February 2013", out: "2013-02-03 00:00:00 +0000 UTC"},
 	// Chinese 2014年04月18日
+	{in: "2014年", out: "2014-01-01 00:00:00 +0000 UTC"},
+	{in: "2014年4月", out: "2014-04-01 00:00:00 +0000 UTC"},
+	{in: "2014年4月8日", out: "2014-04-08 00:00:00 +0000 UTC"},
+	{in: "2014年4月8日上午", out: "2014-04-08 00:00:00 +0000 UTC"},
+	{in: "2014年4月8日上", out: "2014-04-08 00:00:00 +0000 UTC"},
+	{in: "2014年4月8日 19:17", out: "2014-04-08 19:17:00 +0000 UTC"},
+	{in: "2014年4月8日 19:17:22", out: "2014-04-08 19:17:22 +0000 UTC"},
+	{in: "2014年4月8日下午19:17", out: "2014-04-08 19:17:00 +0000 UTC"},
+	{in: "2014年4月8日下午19:17:22", out: "2014-04-08 19:17:22 +0000 UTC"},
+	{in: "2014年4月8日上午04:08:09", out: "2014-04-08 04:08:09 +0000 UTC"},
+	{in: "2014年4月8日19时", out: "2014-04-08 19:00:00 +0000 UTC"},
+	{in: "2014年4月8日19时17分", out: "2014-04-08 19:17:00 +0000 UTC"},
+	{in: "2014年4月8日19时17分22秒", out: "2014-04-08 19:17:22 +0000 UTC"},
+	{in: "2014年4月8日上午04时08分", out: "2014-04-08 04:08:00 +0000 UTC"},
+	{in: "2014年4月8日上午4时8分", out: "2014-04-08 04:08:00 +0000 UTC"},
+	{in: "2014年4月8日下午19时17分", out: "2014-04-08 19:17:00 +0000 UTC"},
+	{in: "2014年4月8日下午7时17分", out: "2014-04-08 19:17:00 +0000 UTC"},
+	{in: "2014年04月", out: "2014-04-01 00:00:00 +0000 UTC"},
 	{in: "2014年04月08日", out: "2014-04-08 00:00:00 +0000 UTC"},
+	{in: "2014年04月08日 19:17", out: "2014-04-08 19:17:00 +0000 UTC"},
 	{in: "2014年04月08日 19:17:22", out: "2014-04-08 19:17:22 +0000 UTC"},
+	{in: "2014年04月08日下午19:17", out: "2014-04-08 19:17:00 +0000 UTC"},
+	{in: "2014年04月08日下午19:17:22", out: "2014-04-08 19:17:22 +0000 UTC"},
+	{in: "2014年04月08日上午04:08:09", out: "2014-04-08 04:08:09 +0000 UTC"},
+	{in: "2014年04月08日19时", out: "2014-04-08 19:00:00 +0000 UTC"},
+	{in: "2014年04月08日19时17分", out: "2014-04-08 19:17:00 +0000 UTC"},
+	{in: "2014年04月08日19时17分22秒", out: "2014-04-08 19:17:22 +0000 UTC"},
+	{in: "2014年04月08日上午04时08分", out: "2014-04-08 04:08:00 +0000 UTC"},
+	{in: "2014年04月08日上午4时8分", out: "2014-04-08 04:08:00 +0000 UTC"},
+	{in: "2014年04月08日下午19时17分", out: "2014-04-08 19:17:00 +0000 UTC"},
+	{in: "2014年04月08日下午7时17分", out: "2014-04-08 19:17:00 +0000 UTC"},
 	//  mm/dd/yyyy
 	{in: "03/31/2014", out: "2014-03-31 00:00:00 +0000 UTC"},
 	{in: "3/31/2014", out: "2014-03-31 00:00:00 +0000 UTC"},
@@ -243,6 +272,32 @@ var testInputs = []dateTest{
 	{in: "28-Feb-02", out: "2002-02-28 00:00:00 +0000 UTC"},
 	{in: "15-Jan-18", out: "2018-01-15 00:00:00 +0000 UTC"},
 	{in: "15-Jan-2017", out: "2017-01-15 00:00:00 +0000 UTC"},
+	//   dd-mm-yy
+	{in: "28-02-02", out: "2002-02-28 00:00:00 +0000 UTC"},
+	{in: "15-01-18", out: "2018-01-15 00:00:00 +0000 UTC"},
+	{in: "15-01-2017", out: "2017-01-15 00:00:00 +0000 UTC"},
+	{in: "15-01-2017 04:08", out: "2017-01-15 04:08:00 +0000 UTC"},
+	{in: "28-2-02", out: "2002-02-28 00:00:00 +0000 UTC"},
+	{in: "15-1-18", out: "2018-01-15 00:00:00 +0000 UTC"},
+	{in: "15-1-2017", out: "2017-01-15 00:00:00 +0000 UTC"},
+	//   mm-yy
+	{in: "3-14", out: "2014-03-01 00:00:00 +0000 UTC"},
+	{in: "3-14 04:08", out: "2014-03-01 04:08:00 +0000 UTC"},
+	{in: "3-14 04:08 PM", out: "2014-03-01 16:08:00 +0000 UTC"},
+	{in: "1-3-14", out: "2014-03-01 00:00:00 +0000 UTC"},
+	{in: "1-3-14 04:08", out: "2014-03-01 04:08:00 +0000 UTC"},
+	{in: "1-3-14 04:08 PM", out: "2014-03-01 16:08:00 +0000 UTC"},
+	{in: "03-14", out: "2014-03-01 00:00:00 +0000 UTC"},
+	{in: "03-14 04:08", out: "2014-03-01 04:08:00 +0000 UTC"},
+	{in: "03-14 04:08 PM", out: "2014-03-01 16:08:00 +0000 UTC"},
+	{in: "01-03-14", out: "2014-03-01 00:00:00 +0000 UTC"},
+	{in: "01-03-14 04:08", out: "2014-03-01 04:08:00 +0000 UTC"},
+	{in: "01-03-14 04:08 PM", out: "2014-03-01 16:08:00 +0000 UTC"},
+	// mm-yyyy
+	{in: "03-2014", out: "2014-03-01 00:00:00 +0000 UTC"},
+	{in: "01-03-2014", out: "2014-03-01 00:00:00 +0000 UTC"},
+	{in: "01-03-2014 04:08", out: "2014-03-01 04:08:00 +0000 UTC"},
+	{in: "01-03-2014 04:08 PM", out: "2014-03-01 16:08:00 +0000 UTC"},
 	// yyyy-mm
 	{in: "2014-04", out: "2014-04-01 00:00:00 +0000 UTC"},
 	//   yyyy-mm-dd hh:mm:ss AM
@@ -395,11 +450,22 @@ var testInputs = []dateTest{
 	// yyyy.mm
 	{in: "2014.05", out: "2014-05-01 00:00:00 +0000 UTC"},
 	{in: "2018.09.30", out: "2018-09-30 00:00:00 +0000 UTC"},
+	{in: "2014.03.01 04:08", out: "2014-03-01 04:08:00 +0000 UTC"},
+	{in: "2014.03.01 04:08 PM", out: "2014-03-01 16:08:00 +0000 UTC"},
+	{in: "2014.5", out: "2014-05-01 00:00:00 +0000 UTC"},
+	{in: "2018.9.30", out: "2018-09-30 00:00:00 +0000 UTC"},
+	{in: "2014.3.1 04:08", out: "2014-03-01 04:08:00 +0000 UTC"},
+	{in: "2014.3.1 04:08 PM", out: "2014-03-01 16:08:00 +0000 UTC"},
 
 	//   mm.dd.yyyy
 	{in: "3.31.2014", out: "2014-03-31 00:00:00 +0000 UTC"},
 	{in: "3.3.2014", out: "2014-03-03 00:00:00 +0000 UTC"},
+	{in: "3.3.2014 04:08", out: "2014-03-03 04:08:00 +0000 UTC"},
+	{in: "3.3.2014 04:08 PM", out: "2014-03-03 16:08:00 +0000 UTC"},
 	{in: "03.31.2014", out: "2014-03-31 00:00:00 +0000 UTC"},
+	{in: "03.03.2014 04:08", out: "2014-03-03 04:08:00 +0000 UTC"},
+	{in: "03.03.2014 04:08 PM", out: "2014-03-03 16:08:00 +0000 UTC"},
+
 	//   mm.dd.yy
 	{in: "08.21.71", out: "1971-08-21 00:00:00 +0000 UTC"},
 	//  yyyymmdd and similar
@@ -511,7 +577,7 @@ var testParseErrors = []dateTest{
 	{in: "oct.-7-1970", err: true},
 	{in: "septe. 7, 1970", err: true},
 	{in: "SeptemberRR 7th, 1970", err: true},
-	{in: "29-06-2016", err: true},
+	{in: "13-*-03", err: true},
 	// this is just testing the empty space up front
 	{in: " 2018-01-02 17:08:09 -07:00", err: true},
 }
@@ -741,6 +807,42 @@ func TestPreferMonthFirst(t *testing.T) {
 	ts, err = ParseAny("04/02/2014 04:08:09 +0000 UTC", preferMonthFirstFalse)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, "2014-02-04 04:08:09 +0000 UTC", fmt.Sprintf("%v", ts.In(time.UTC)))
+
+	ts, err = ParseAny("3.14 04:08:09 PM", preferMonthFirstFalse)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "2014-03-01 16:08:09 +0000 UTC", fmt.Sprintf("%v", ts.In(time.UTC)))
+
+	ts, err = ParseAny("1.3.14 04:08:09 PM", preferMonthFirstFalse)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "2014-03-01 16:08:09 +0000 UTC", fmt.Sprintf("%v", ts.In(time.UTC)))
+
+	ts, err = ParseAny("03.2014 04:08:09 PM", preferMonthFirstFalse)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "2014-03-01 16:08:09 +0000 UTC", fmt.Sprintf("%v", ts.In(time.UTC)))
+
+	ts, err = ParseAny("01.03.2014 04:08:09 PM", preferMonthFirstFalse)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "2014-03-01 16:08:09 +0000 UTC", fmt.Sprintf("%v", ts.In(time.UTC)))
+
+	ts, err = ParseAny("3/14", preferMonthFirstFalse)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "2014-03-01 00:00:00 +0000 UTC", fmt.Sprintf("%v", ts.In(time.UTC)))
+
+	ts, err = ParseAny("3/14 04:08:09 PM", preferMonthFirstFalse)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "2014-03-01 16:08:09 +0000 UTC", fmt.Sprintf("%v", ts.In(time.UTC)))
+
+	ts, err = ParseAny("1/3/14 04:08:09 PM", preferMonthFirstFalse)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "2014-03-01 16:08:09 +0000 UTC", fmt.Sprintf("%v", ts.In(time.UTC)))
+
+	ts, err = ParseAny("03/2014 04:08:09 PM", preferMonthFirstFalse)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "2014-03-01 16:08:09 +0000 UTC", fmt.Sprintf("%v", ts.In(time.UTC)))
+
+	ts, err = ParseAny("01/03/2014 04:08:09 PM", preferMonthFirstFalse)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "2014-03-01 16:08:09 +0000 UTC", fmt.Sprintf("%v", ts.In(time.UTC)))
 }
 
 func TestRetryAmbiguousDateWithSwap(t *testing.T) {
@@ -758,4 +860,20 @@ func TestRetryAmbiguousDateWithSwap(t *testing.T) {
 	ts, err := ParseAny("13/02/2014 04:08:09 +0000 UTC", retryAmbiguousDateWithSwapTrue)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, "2014-02-13 04:08:09 +0000 UTC", fmt.Sprintf("%v", ts.In(time.UTC)))
+}
+
+func TestFillChineseYearIfNotExists(t *testing.T) {
+	fillChineseYearFalse := FillChineseYearIfNotExists(false)
+	ts, err := ParseAny("4月8日", fillChineseYearFalse)
+	assert.NoError(t, err)
+	assert.Equal(t, "0000-04-08 00:00:00 +0000 UTC", fmt.Sprintf("%v", ts.In(time.UTC)))
+
+	fillChineseYearTrue := FillChineseYearIfNotExists(true)
+	ts, err = ParseAny("4月8日", fillChineseYearTrue)
+	assert.NoError(t, err)
+	assert.Equal(t, "2021-04-08 00:00:00 +0000 UTC", fmt.Sprintf("%v", ts.In(time.UTC)))
+
+	ts, err = ParseAny("4月8日 19:17", fillChineseYearTrue)
+	assert.NoError(t, err)
+	assert.Equal(t, "2021-04-08 19:17:00 +0000 UTC", fmt.Sprintf("%v", ts.In(time.UTC)))
 }

@@ -93,6 +93,7 @@ const (
 	dateAlphaPeriodWsDigit
 	dateWeekdayComma
 	dateWeekdayAbbrevComma
+	dateDigitDashDigit
 )
 const (
 	// Time state
@@ -335,10 +336,11 @@ iterRunes:
 							p.dayi = i + 1
 						}
 					} else {
-						if p.daylen == 0 {
-							p.daylen = i
-							p.setDay()
-							p.moi = i + 1
+						// 3/14
+						if p.molen == 0 {
+							p.molen = i
+							p.setMonth()
+							p.yeari = i + 1
 						}
 					}
 
@@ -374,10 +376,20 @@ iterRunes:
 					p.setYear()
 				} else {
 					p.ambiguousMD = true
-					p.moi = 0
-					p.molen = i
-					p.setMonth()
-					p.dayi = i + 1
+					if p.preferMonthFirst {
+						if p.molen == 0 {
+							p.molen = i
+							p.setMonth()
+							p.dayi = i + 1
+						}
+					} else {
+						// 3.14
+						if p.molen == 0 {
+							p.molen = i
+							p.setMonth()
+							p.yeari = i + 1
+						}
+					}
 				}
 
 			case ' ':
@@ -398,6 +410,17 @@ iterRunes:
 			case '年':
 				// Chinese Year
 				p.stateDate = dateDigitChineseYear
+				p.yeari = 0
+				p.yearlen = i - bytesConsumed + 1
+				p.setYear()
+				p.moi = i + 1
+			case '月':
+				// Missing year
+				p.molen = i - bytesConsumed + 1
+				p.setMonth()
+				p.dayi = i + 1
+				p.stateDate = dateDigitChineseYear
+				p.yearExists = false
 			case ',':
 				return nil, unknownErr(datestr)
 			default:
@@ -485,6 +508,9 @@ iterRunes:
 			if unicode.IsLetter(r) {
 				p.stateDate = dateDigitDashAlpha
 				p.moi = i
+			} else if unicode.IsNumber(r) {
+				p.stateDate = dateDigitDashDigit
+				p.moi = i
 			} else {
 				return nil, unknownErr(datestr)
 			}
@@ -498,6 +524,43 @@ iterRunes:
 				p.set(p.moi, "Jan")
 				p.yeari = i + 1
 				p.stateDate = dateDigitDashAlphaDash
+			}
+
+		case dateDigitDashDigit:
+			// 15-01-18
+			// 15-1-18
+			switch r {
+			case '-':
+				p.molen = i - p.moi
+				p.setMonth()
+				p.yeari = i + 1
+				p.stateDate = dateDigitDashAlphaDash
+			case ' ':
+				p.yeari = p.moi
+				p.molen = p.moi - 1
+				p.moi = 0
+				p.setMonth()
+
+				p.ambiguousMD = true
+				p.yearlen = i - p.yeari
+				p.setYear()
+				p.stateTime = timeStart
+				break iterRunes
+			default:
+				if i == len(datestr)-1 {
+					// 1-18
+					// 01-18
+					p.yeari = p.moi
+
+					p.molen = p.moi - 1
+					p.moi = 0
+					p.setMonth()
+
+					p.ambiguousMD = true
+					p.yearlen = i - p.yeari + 1
+					p.setYear()
+					break iterRunes
+				}
 			}
 
 		case dateDigitDashAlphaDash:
@@ -595,9 +658,15 @@ iterRunes:
 						p.yeari = i + 1
 					}
 				} else {
-					if p.molen == 0 {
+					if p.moi == 0 {
+						// 1/3/14
+						p.daylen = p.molen
+						p.setDay()
+
+						p.moi = p.yeari
 						p.molen = i - p.moi
 						p.setMonth()
+
 						p.yeari = i + 1
 					}
 				}
@@ -707,11 +776,46 @@ iterRunes:
 		case dateDigitChineseYear:
 			// dateDigitChineseYear
 			//   2014年04月08日
+			//   2014年4月8日
 			//               weekday  %Y年%m月%e日 %A %I:%M %p
 			// 2013年07月18日 星期四 10:27 上午
-			if r == ' ' {
+			rawi := i - bytesConsumed + 1
+			switch r {
+			case '上', '下':
+				s, e := rawi, i
+				next, idx := p.nextRune(i + 1)
+				if next == '午' {
+					e = idx
+				}
+				p.delete(s, e)
+				p.setPM()
+				if r == '上' {
+					p.datestr += "AM"
+				} else {
+					p.datestr += "PM"
+				}
+				i = rawi - 1
+				datestr = p.datestr
+				p.stateTime = timeStart
 				p.stateDate = dateDigitChineseYearWs
-				break
+				break iterRunes
+			case '月':
+				p.molen = rawi - p.moi
+				p.setMonth()
+				p.dayi = i + 1
+			case '日':
+				p.daylen = rawi - p.dayi
+				p.setDay()
+
+				if p.nextIsDigit(i) {
+					p.stateTime = timeStart
+					p.stateDate = dateDigitChineseYearWs
+					break iterRunes
+				}
+			case ' ':
+				p.stateTime = timeStart
+				p.stateDate = dateDigitChineseYearWs
+				break iterRunes
 			}
 		case dateDigitDot:
 			// This is the 2nd period
@@ -719,13 +823,28 @@ iterRunes:
 			// 08.21.71
 			// 2014.05
 			// 2018.09.30
-			if r == '.' {
+			switch r {
+			case '.':
 				if p.moi == 0 {
-					// 3.31.2014
-					p.daylen = i - p.dayi
-					p.yeari = i + 1
-					p.setDay()
-					p.stateDate = dateDigitDotDot
+					if p.preferMonthFirst {
+						// 3.31.2014
+						p.daylen = i - p.dayi
+						p.yeari = i + 1
+						p.setDay()
+						p.stateDate = dateDigitDotDot
+					} else {
+						// 1.3.14
+						p.daylen = p.molen
+						p.setDay()
+
+						p.moi = p.yeari
+						p.molen = i - p.moi
+						p.setMonth()
+
+						p.yeari = i + 1
+						p.stateDate = dateDigitDotDot
+					}
+
 				} else {
 					// 2018.09.30
 					//p.molen = 2
@@ -734,9 +853,21 @@ iterRunes:
 					p.setMonth()
 					p.stateDate = dateDigitDotDot
 				}
+			case ' ':
+				p.yearlen = i - p.yeari
+				p.setYear()
+				p.stateTime = timeStart
+				break iterRunes
 			}
 		case dateDigitDotDot:
 			// iterate all the way through
+			switch r {
+			case ' ':
+				p.yearlen = i - p.yeari
+				p.setYear()
+				p.stateTime = timeStart
+				break iterRunes
+			}
 		case dateAlpha:
 			// dateAlphaWS
 			//  Mon Jan _2 15:04:05 2006
@@ -1127,7 +1258,10 @@ iterRunes:
 
 	iterTimeRunes:
 		for ; i < len(datestr); i++ {
-			r := rune(datestr[i])
+			r, bytesConsumed := utf8.DecodeRuneInString(datestr[i:])
+			if bytesConsumed > 1 {
+				i += (bytesConsumed - 1)
+			}
 
 			// gou.Debugf("i=%d r=%s state=%d iterTimeRunes  %s %s", i, string(r), p.stateTime, p.ds(), p.ts())
 
@@ -1171,7 +1305,19 @@ iterRunes:
 				if p.houri == 0 {
 					p.houri = i
 				}
+
+				rawi := i - bytesConsumed + 1
 				switch r {
+				case '时':
+					p.hourlen = rawi - p.houri
+					p.mini = i + 1
+				case '分':
+					p.minlen = rawi - p.mini
+					if p.nextIsDigit(i) {
+						p.seci = i + 1
+					}
+				case '秒':
+					p.seclen = rawi - p.seci
 				case ',':
 					// hm, lets just swap out comma for period.  for some reason go
 					// won't parse it.
@@ -1818,6 +1964,9 @@ iterRunes:
 	case dateYearDashDashT:
 		return p, nil
 
+	case dateDigitDashDigit:
+		return p, nil
+
 	case dateDigitDashAlphaDash:
 		// 13-Feb-03   ambiguous
 		// 28-Feb-03   ambiguous
@@ -1931,11 +2080,19 @@ iterRunes:
 	case dateDigitChineseYear:
 		// dateDigitChineseYear
 		//   2014年04月08日
-		p.format = []byte("2006年01月02日")
+		//   2014年4月8日
+		if p.fillChineseYear && !p.yearExists {
+			p.fillYear()
+		}
 		return p, nil
 
 	case dateDigitChineseYearWs:
-		p.format = []byte("2006年01月02日 15:04:05")
+		// dateDigitChineseYear
+		//   2014年04月08日 19:17:22
+		//   2014年4月8日 19:17:22
+		if p.fillChineseYear && !p.yearExists {
+			p.fillYear()
+		}
 		return p, nil
 
 	case dateWeekdayComma:
@@ -1959,6 +2116,8 @@ type parser struct {
 	preferMonthFirst           bool
 	retryAmbiguousDateWithSwap bool
 	ambiguousMD                bool
+	fillChineseYear            bool
+	yearExists                 bool
 	stateDate                  dateState
 	stateTime                  timeState
 	format                     []byte
@@ -2000,6 +2159,14 @@ func PreferMonthFirst(preferMonthFirst bool) ParserOption {
 	}
 }
 
+// PreferMonthFirst is an option that allows fillChineseYear to be changed from its default
+func FillChineseYearIfNotExists(fillChineseYear bool) ParserOption {
+	return func(p *parser) error {
+		p.fillChineseYear = fillChineseYear
+		return nil
+	}
+}
+
 // RetryAmbiguousDateWithSwap is an option that allows retryAmbiguousDateWithSwap to be changed from its default
 func RetryAmbiguousDateWithSwap(retryAmbiguousDateWithSwap bool) ParserOption {
 	return func(p *parser) error {
@@ -2016,6 +2183,7 @@ func newParser(dateStr string, loc *time.Location, opts ...ParserOption) *parser
 		loc:                        loc,
 		preferMonthFirst:           true,
 		retryAmbiguousDateWithSwap: false,
+		yearExists:                 true,
 	}
 	p.format = []byte(dateStr)
 
@@ -2031,6 +2199,44 @@ func (p *parser) nextIs(i int, b byte) bool {
 		return true
 	}
 	return false
+}
+
+func (p *parser) nextIsDigit(i int) bool {
+	if len(p.datestr) > i+1 && p.datestr[i+1] >= '0' && p.datestr[i+1] <= '9' {
+		return true
+	}
+	return false
+}
+
+func (p *parser) nextRune(i int) (rune, int) {
+	r, bytesConsumed := utf8.DecodeRuneInString(p.datestr[i:])
+	if bytesConsumed > 1 {
+		return r, i + (bytesConsumed - 1)
+	}
+	return r, i + 1
+}
+
+func (p *parser) delete(start int, end int) {
+	if end+1 >= len(p.format) {
+		p.format = p.format[:start]
+		p.datestr = p.datestr[:start]
+		return
+	}
+
+	p.format = append(p.format[:start], p.format[end+1:]...)
+	p.datestr = fmt.Sprintf("%s%s", p.datestr[0:start], p.datestr[end+1:])
+}
+
+func (p *parser) fillYear() {
+	y, _, _ := time.Now().Date()
+	year := fmt.Sprintf("%d年", y)
+	p.datestr = year + p.datestr
+	format := []byte("2006年")
+	p.format = append(format, p.format...)
+}
+
+func (p *parser) setPM() {
+	p.format = append(p.format, []byte("PM")...)
 }
 
 func (p *parser) set(start int, val string) {
