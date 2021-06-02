@@ -336,10 +336,11 @@ iterRunes:
 							p.dayi = i + 1
 						}
 					} else {
-						if p.daylen == 0 {
-							p.daylen = i
-							p.setDay()
-							p.moi = i + 1
+						// 3/14
+						if p.molen == 0 {
+							p.molen = i
+							p.setMonth()
+							p.yeari = i + 1
 						}
 					}
 
@@ -657,9 +658,15 @@ iterRunes:
 						p.yeari = i + 1
 					}
 				} else {
-					if p.molen == 0 {
+					if p.moi == 0 {
+						// 1/3/14
+						p.daylen = p.molen
+						p.setDay()
+
+						p.moi = p.yeari
 						p.molen = i - p.moi
 						p.setMonth()
+
 						p.yeari = i + 1
 					}
 				}
