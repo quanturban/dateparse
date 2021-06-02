@@ -2082,11 +2082,7 @@ iterRunes:
 		//   2014年04月08日
 		//   2014年4月8日
 		if p.fillChineseYear {
-			y, _, _ := time.Now().Date()
-			year := fmt.Sprintf("%d年", y)
-			p.datestr = year + p.datestr
-			format := []byte("2006年")
-			p.format = append(format, p.format...)
+			p.fillYear()
 		}
 		return p, nil
 
@@ -2094,6 +2090,9 @@ iterRunes:
 		// dateDigitChineseYear
 		//   2014年04月08日 19:17:22
 		//   2014年4月8日 19:17:22
+		if p.fillChineseYear {
+			p.fillYear()
+		}
 		return p, nil
 
 	case dateWeekdayComma:
@@ -2216,6 +2215,14 @@ func (p *parser) delete(start int, end int) {
 
 	p.format = append(p.format[:start], p.format[end+1:]...)
 	p.datestr = fmt.Sprintf("%s%s", p.datestr[0:start], p.datestr[end+1:])
+}
+
+func (p *parser) fillYear() {
+	y, _, _ := time.Now().Date()
+	year := fmt.Sprintf("%d年", y)
+	p.datestr = year + p.datestr
+	format := []byte("2006年")
+	p.format = append(format, p.format...)
 }
 
 func (p *parser) setPM() {
