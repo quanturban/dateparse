@@ -420,7 +420,6 @@ iterRunes:
 				p.setMonth()
 				p.dayi = i + 1
 				p.stateDate = dateDigitChineseYear
-				p.yearExists = false
 			case ',':
 				return nil, unknownErr(datestr)
 			default:
@@ -2081,18 +2080,12 @@ iterRunes:
 		// dateDigitChineseYear
 		//   2014年04月08日
 		//   2014年4月8日
-		if p.fillChineseYear && !p.yearExists {
-			p.fillYear()
-		}
 		return p, nil
 
 	case dateDigitChineseYearWs:
 		// dateDigitChineseYear
 		//   2014年04月08日 19:17:22
 		//   2014年4月8日 19:17:22
-		if p.fillChineseYear && !p.yearExists {
-			p.fillYear()
-		}
 		return p, nil
 
 	case dateWeekdayComma:
@@ -2117,7 +2110,6 @@ type parser struct {
 	retryAmbiguousDateWithSwap bool
 	ambiguousMD                bool
 	fillChineseYear            bool
-	yearExists                 bool
 	stateDate                  dateState
 	stateTime                  timeState
 	format                     []byte
@@ -2159,14 +2151,6 @@ func PreferMonthFirst(preferMonthFirst bool) ParserOption {
 	}
 }
 
-// PreferMonthFirst is an option that allows fillChineseYear to be changed from its default
-func FillChineseYearIfNotExists(fillChineseYear bool) ParserOption {
-	return func(p *parser) error {
-		p.fillChineseYear = fillChineseYear
-		return nil
-	}
-}
-
 // RetryAmbiguousDateWithSwap is an option that allows retryAmbiguousDateWithSwap to be changed from its default
 func RetryAmbiguousDateWithSwap(retryAmbiguousDateWithSwap bool) ParserOption {
 	return func(p *parser) error {
@@ -2183,7 +2167,6 @@ func newParser(dateStr string, loc *time.Location, opts ...ParserOption) *parser
 		loc:                        loc,
 		preferMonthFirst:           true,
 		retryAmbiguousDateWithSwap: false,
-		yearExists:                 true,
 	}
 	p.format = []byte(dateStr)
 
@@ -2225,14 +2208,6 @@ func (p *parser) delete(start int, end int) {
 
 	p.format = append(p.format[:start], p.format[end+1:]...)
 	p.datestr = fmt.Sprintf("%s%s", p.datestr[0:start], p.datestr[end+1:])
-}
-
-func (p *parser) fillYear() {
-	y, _, _ := time.Now().Date()
-	year := fmt.Sprintf("%d年", y)
-	p.datestr = year + p.datestr
-	format := []byte("2006年")
-	p.format = append(format, p.format...)
 }
 
 func (p *parser) setPM() {
