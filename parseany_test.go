@@ -173,8 +173,6 @@ var testInputs = []dateTest{
 	{in: "2014年4月8日", out: "2014-04-08 00:00:00 +0000 UTC"},
 	{in: "2014年4月8日上午", out: "2014-04-08 00:00:00 +0000 UTC"},
 	{in: "2014年4月8日上", out: "2014-04-08 00:00:00 +0000 UTC"},
-	{in: "4月8日", out: "2021-04-08 00:00:00 +0000 UTC"},
-	{in: "4月8日 19:17", out: "2021-04-08 19:17:00 +0000 UTC"},
 	{in: "2014年4月8日 19:17", out: "2014-04-08 19:17:00 +0000 UTC"},
 	{in: "2014年4月8日 19:17:22", out: "2014-04-08 19:17:22 +0000 UTC"},
 	{in: "2014年4月8日下午19:17", out: "2014-04-08 19:17:00 +0000 UTC"},
@@ -862,4 +860,20 @@ func TestRetryAmbiguousDateWithSwap(t *testing.T) {
 	ts, err := ParseAny("13/02/2014 04:08:09 +0000 UTC", retryAmbiguousDateWithSwapTrue)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, "2014-02-13 04:08:09 +0000 UTC", fmt.Sprintf("%v", ts.In(time.UTC)))
+}
+
+func TestFillChineseYearIfNotExists(t *testing.T) {
+	fillChineseYearFalse := FillChineseYearIfNotExists(false)
+	ts, err := ParseAny("4月8日", fillChineseYearFalse)
+	assert.NoError(t, err)
+	assert.Equal(t, "0000-04-08 00:00:00 +0000 UTC", fmt.Sprintf("%v", ts.In(time.UTC)))
+
+	fillChineseYearTrue := FillChineseYearIfNotExists(true)
+	ts, err = ParseAny("4月8日", fillChineseYearTrue)
+	assert.NoError(t, err)
+	assert.Equal(t, "2021-04-08 00:00:00 +0000 UTC", fmt.Sprintf("%v", ts.In(time.UTC)))
+
+	ts, err = ParseAny("4月8日 19:17", fillChineseYearTrue)
+	assert.NoError(t, err)
+	assert.Equal(t, "2021-04-08 19:17:00 +0000 UTC", fmt.Sprintf("%v", ts.In(time.UTC)))
 }
